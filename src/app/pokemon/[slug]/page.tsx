@@ -17,6 +17,7 @@ import {
   statColor,
 } from "@/utils";
 import { TypeBadge } from "@/components/TypeBadge";
+import { BiomeModal } from "@/components/BiomeModal";
 import { RarityBadge } from "@/components/RarityBadge";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -39,6 +40,7 @@ export default function PokemonDetailPage() {
   const [pokemon, setPokemon] = useState<Pokemon | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [activeBiome, setActiveBiome] = useState<string | null>(null);
   const [lang, setLang] = useState<Lang>("fr");
 
   useEffect(() => {
@@ -240,8 +242,10 @@ export default function PokemonDetailPage() {
                   <tr key={i}>
                     <td>
                       {spawn.biomes.map((b) => (
-                        <span key={b} style={{ background: "var(--bg3)", padding: "2px 6px", borderRadius: 4, fontSize: 11, margin: "1px", display: "inline-block" }}>
-                          {b}
+                        <span key={b} onClick={() => setActiveBiome(b)} style={{ background: "var(--bg3)", padding: "2px 6px", borderRadius: 4, fontSize: 11, margin: "1px", display: "inline-block", cursor: "pointer", transition: "all 0.15s" }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLSpanElement).style.color = "var(--accent)"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.borderColor = "transparent"; (e.currentTarget as HTMLSpanElement).style.color = ""; }}>
+                          🗺️ {b}
                         </span>
                       ))}
                     </td>
@@ -361,8 +365,10 @@ export default function PokemonDetailPage() {
             <div className="section-title">🗺️ {lang === "fr" ? "Biomes recommandés" : "Recommended Biomes"}</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
               {biomes.map((b) => (
-                <div key={b} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600 }}>
-                  📍 {b}
+                <div key={b} onClick={() => setActiveBiome(b)} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)"; }}>
+                  🗺️ {b}
                 </div>
               ))}
             </div>
@@ -374,6 +380,9 @@ export default function PokemonDetailPage() {
           ← {lang === "fr" ? "Retour au Dex" : "Back to Dex"}
         </Link>
       </div>
+
+      {/* BIOME MODAL */}
+      {activeBiome && <BiomeModal biomeName={activeBiome} lang={lang} onClose={() => setActiveBiome(null)} />}
 
       {/* TOAST */}
       {toast && <div className="toast">{toast}</div>}
