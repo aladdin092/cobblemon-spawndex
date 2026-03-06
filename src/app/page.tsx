@@ -23,7 +23,7 @@ const DEFAULT_FILTERS: FilterState = {
   time: [],
   weather: [],
   dimension: [],
-  sortBy: "name",
+  sortBy: "id",
 };
 
 export default function HomePage() {
