@@ -60,6 +60,21 @@ export default function HomePage() {
     const saved = typeof window !== "undefined" && sessionStorage.getItem("lang") as Lang | null;
     if (saved === "en" || saved === "fr") setLang(saved);
   }, []);
+
+  // Restore scroll position when coming back from detail page
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem("scrollY");
+    const savedVisible = sessionStorage.getItem("visibleCount");
+    if (savedScroll && savedVisible) {
+      const count = parseInt(savedVisible);
+      setVisibleCount(count);
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScroll));
+        sessionStorage.removeItem("scrollY");
+        sessionStorage.removeItem("visibleCount");
+      }, 100);
+    }
+  }, [allPokemon]);
   const { theme, toggle } = useTheme();
 
   useEffect(() => {
