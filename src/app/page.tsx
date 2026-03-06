@@ -100,13 +100,16 @@ export default function HomePage() {
     let list = [...allPokemon];
 
     if (filters.search) {
-      const q = filters.search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name_en?.toLowerCase().includes(q) ||
-          p.name_fr?.toLowerCase().includes(q) ||
-          p.name?.toLowerCase().includes(q) ||
-          p.types.some((t) => t.toLowerCase().includes(q))
+      // trim spaces + normalize: remove hyphens/accents for fuzzy match
+      const normalize = (s: string) => s.toLowerCase().trim()
+        .replace(/[-_''.]/g, " ")
+        .replace(/\s+/g, " ");
+      const q = normalize(filters.search);
+      list = list.filter((p) =>
+        normalize(p.name_en || "").includes(q) ||
+        normalize(p.name_fr || "").includes(q) ||
+        normalize(p.name || "").includes(q) ||
+        p.types.some((t) => t.toLowerCase().includes(q.trim()))
       );
     }
 
