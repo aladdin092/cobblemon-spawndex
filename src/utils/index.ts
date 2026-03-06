@@ -1,4 +1,5 @@
 import { Pokemon, Rarity, PokemonType } from "@/types";
+export type { PokemonType };
 
 export const RARITY_ORDER: Record<Rarity, number> = {
   common: 1,
