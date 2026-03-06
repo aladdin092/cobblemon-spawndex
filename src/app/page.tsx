@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Pokemon, FilterState } from "@/types";
 import {
@@ -32,6 +32,28 @@ export default function HomePage() {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [view, setView] = useState<View>("list");
   const [lang, setLang] = useState<Lang>("fr");
+  const [visibleCount, setVisibleCount] = useState(60);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(60);
+  }, [filters, lang]);
+
+  // Infinite scroll via IntersectionObserver
+  const onIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
+    if (entries[0].isIntersecting) {
+      setVisibleCount((c) => c + 60);
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(onIntersect, { rootMargin: "200px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onIntersect]);
 
   // Sync lang to sessionStorage so detail page can read it
   useEffect(() => {
@@ -246,9 +268,16 @@ export default function HomePage() {
                 />
               ))
             ) : filtered.length > 0 ? (
-              filtered.map((p) => (
-                <PokemonCard key={p.slug} pokemon={p} lang={lang} />
-              ))
+              <>
+                {filtered.slice(0, visibleCount).map((p) => (
+                  <PokemonCard key={p.slug} pokemon={p} lang={lang} />
+                ))}
+                {visibleCount < filtered.length && (
+                  <div ref={sentinelRef} style={{ gridColumn: "1/-1", height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                  </div>
+                )}
+              </>
             ) : (
               <div className="empty-state">
                 <div className="empty-icon">🔍</div>

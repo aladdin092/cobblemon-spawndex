@@ -736,3 +736,7 @@ body {
   .grid-container { padding: 12px; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .detail-body { padding: 16px; }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
