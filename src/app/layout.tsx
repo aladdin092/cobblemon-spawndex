@@ -5,6 +5,10 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 export const metadata: Metadata = {
   title: "Cobblemon Spawn Dex",
   description: "Pokédex-style spawn tracker for Cobblemon / Cobbleverse",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
