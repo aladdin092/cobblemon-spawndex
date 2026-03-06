@@ -68,11 +68,14 @@ export default function HomePage() {
     if (savedScroll && savedVisible) {
       const count = parseInt(savedVisible);
       setVisibleCount(count);
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScroll));
-        sessionStorage.removeItem("scrollY");
-        sessionStorage.removeItem("visibleCount");
-      }, 100);
+      // Wait for cards to render then scroll
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: parseInt(savedScroll), behavior: "instant" });
+          sessionStorage.removeItem("scrollY");
+          sessionStorage.removeItem("visibleCount");
+        });
+      });
     }
   }, [allPokemon]);
   const { theme, toggle } = useTheme();
