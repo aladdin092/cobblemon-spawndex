@@ -12,9 +12,10 @@ import { PokemonCard } from "@/components/PokemonCard";
 import { FilterBar } from "@/components/FilterBar";
 import { TeamPlanner } from "@/components/TeamPlanner";
 import { ItemDex } from "@/components/ItemDex";
+import { BiomeDex } from "@/components/BiomeDex";
 import { useTheme } from "@/components/ThemeProvider";
 
-type View = "list" | "team" | "items";
+type View = "list" | "team" | "items" | "biomes";
 type Lang = "fr" | "en";
 
 const DEFAULT_FILTERS: FilterState = {
@@ -223,6 +224,12 @@ export default function HomePage() {
             >
               🎒 Items
             </button>
+            <button
+              className={`btn ${view === "biomes" ? "active" : ""}`}
+              onClick={() => setView("biomes")}
+            >
+              🗺️ Biomes
+            </button>
             <button className="btn" onClick={toggle} title="Changer thème">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
@@ -230,7 +237,9 @@ export default function HomePage() {
         </div>
       </header>
 
-      {view === "team" ? (
+      {view === "biomes" ? (
+        <BiomeDex allPokemon={allPokemon} lang={lang} />
+      ) : view === "team" ? (
         <TeamPlanner allPokemon={allPokemon} />
       ) : view === "items" ? (
         <ItemDex allPokemon={allPokemon} lang={lang} />
