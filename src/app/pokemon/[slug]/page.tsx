@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -58,6 +59,7 @@ export default function PokemonDetailPage() {
       .catch(() => setLoading(false));
   }, [slug]);
 
+  const router = useRouter();
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2600);
@@ -91,9 +93,9 @@ export default function PokemonDetailPage() {
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, marginBottom: 8 }}>
           Pokémon introuvable
         </h2>
-        <Link href="/" className="btn btn-primary" style={{ display: "inline-flex", marginTop: 16 }}>
+        <button onClick={() => router.back()} className="btn btn-primary" style={{ display: "inline-flex", marginTop: 16, cursor: "pointer" }}>
           ← Retour au Dex
-        </Link>
+        </button>
       </div>
     );
   }
@@ -147,9 +149,9 @@ export default function PokemonDetailPage() {
                 </button>
               ))}
             </div>
-            <Link href="/" className="btn">
+            <button onClick={() => router.back()} className="btn" style={{ cursor: "pointer" }}>
               ← {lang === "fr" ? "Retour" : "Back"}
-            </Link>
+            </button>
             <button className="btn" onClick={toggle} title="Toggle theme">
               {theme === "dark" ? "☀️" : "🌙"}
             </button>

@@ -38,7 +38,6 @@ export default function HomePage() {
   // Reset when filters change
   useEffect(() => {
     setVisibleCount(BATCH);
-    window.scrollTo(0, 0);
   }, [filters, lang]);
 
   // Load more on scroll
