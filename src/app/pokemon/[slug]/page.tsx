@@ -360,20 +360,7 @@ export default function PokemonDetailPage() {
         )}
 
         {/* BIOMES */}
-        {biomes.length > 0 && (
-          <>
-            <div className="section-title">🗺️ {lang === "fr" ? "Biomes recommandés" : "Recommended Biomes"}</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
-              {biomes.map((b) => (
-                <div key={b} onClick={() => setActiveBiome(b)} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--accent)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)"; }}>
-                  🗺️ {b}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+
 
         {/* BACK */}
         <Link href="/" className="btn" style={{ display: "inline-flex" }}>
