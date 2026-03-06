@@ -66,6 +66,7 @@ export default function HomePage() {
     fetch("/data/pokemon.json")
       .then((r) => r.json())
       .then((data: Pokemon[]) => {
+        // Stream display: set data first, then mark loaded
         setAllPokemon(data);
         setLoading(false);
       })
@@ -254,7 +255,7 @@ export default function HomePage() {
           {/* GRILLE */}
           <div className="grid-container">
             {loading ? (
-              Array.from({ length: 12 }).map((_, i) => (
+              Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   style={{

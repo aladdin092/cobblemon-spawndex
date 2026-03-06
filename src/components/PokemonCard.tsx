@@ -55,6 +55,7 @@ export function PokemonCard({ pokemon, lang = "fr" }: Props) {
           height={100}
           className="card-img"
           unoptimized
+          loading="lazy"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).src = pokemon.sprite;
           }}
