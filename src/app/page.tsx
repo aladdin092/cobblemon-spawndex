@@ -62,20 +62,26 @@ export default function HomePage() {
 
   // Restore scroll position when coming back from detail page
   useEffect(() => {
+    if (allPokemon.length === 0) return;
     const savedScroll = sessionStorage.getItem("scrollY");
     const savedVisible = sessionStorage.getItem("visibleCount");
-    if (savedScroll && savedVisible) {
-      const count = parseInt(savedVisible);
-      setVisibleCount(count);
-      // Wait for cards to render then scroll
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: parseInt(savedScroll), behavior: "instant" });
-          sessionStorage.removeItem("scrollY");
-          sessionStorage.removeItem("visibleCount");
-        });
-      });
-    }
+    if (!savedScroll || !savedVisible) return;
+    const scrollY = parseInt(savedScroll);
+    const count = parseInt(savedVisible);
+    setVisibleCount(count);
+    sessionStorage.removeItem("scrollY");
+    sessionStorage.removeItem("visibleCount");
+    // Try multiple times until scroll position is reachable
+    let attempts = 0;
+    const tryScroll = () => {
+      if (document.documentElement.scrollHeight >= scrollY + window.innerHeight || attempts > 20) {
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      } else {
+        attempts++;
+        setTimeout(tryScroll, 50);
+      }
+    };
+    setTimeout(tryScroll, 50);
   }, [allPokemon]);
   const { theme, toggle } = useTheme();
 
