@@ -118,7 +118,7 @@ export default function PokemonDetailPage() {
       <header className="header">
         <div className="header-inner">
           <Link href="/" className="logo">
-            <div className="logo-icon">⚔️</div>
+            <img src="/logo.png" alt="SpawnDex logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
             <div>
               <div className="logo-text">SpawnDex</div>
               <div className="logo-sub">COBBLEMON</div>
