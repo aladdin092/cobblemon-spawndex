@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Pokemon, FilterState } from "@/types";
 import {
@@ -33,46 +33,26 @@ export default function HomePage() {
   const [view, setView] = useState<View>("list");
   const [lang, setLang] = useState<Lang>("fr");
   const BATCH = 48;
-  const MAX_DOM = 96; // max cards in DOM at once
-  const [range, setRange] = useState({ start: 0, end: BATCH });
-  const topSentinel = useRef<HTMLDivElement>(null);
-  const bottomSentinel = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(BATCH);
 
-  // Reset range when filters change
+  // Reset when filters change
   useEffect(() => {
-    setRange({ start: 0, end: BATCH });
+    setVisibleCount(BATCH);
+    window.scrollTo(0, 0);
   }, [filters, lang]);
 
-  // Scroll down → load more
-  const onBottom = useCallback((entries: IntersectionObserverEntry[]) => {
-    if (entries[0].isIntersecting) {
-      setRange((r) => ({
-        start: Math.max(0, r.end - MAX_DOM + BATCH),
-        end: r.end + BATCH,
-      }));
-    }
-  }, []);
-
-  // Scroll up → load previous
-  const onTop = useCallback((entries: IntersectionObserverEntry[]) => {
-    if (entries[0].isIntersecting) {
-      setRange((r) => ({
-        start: Math.max(0, r.start - BATCH),
-        end: Math.min(r.start - BATCH + MAX_DOM, r.end),
-      }));
-    }
-  }, []);
-
+  // Load more on scroll
   useEffect(() => {
-    const bot = bottomSentinel.current;
-    const top = topSentinel.current;
-    if (!bot || !top) return;
-    const obsBot = new IntersectionObserver(onBottom, { rootMargin: "300px" });
-    const obsTop = new IntersectionObserver(onTop, { rootMargin: "300px" });
-    obsBot.observe(bot);
-    obsTop.observe(top);
-    return () => { obsBot.disconnect(); obsTop.disconnect(); };
-  }, [onBottom, onTop]);
+    const handleScroll = () => {
+      const scrolled = window.scrollY + window.innerHeight;
+      const total = document.documentElement.scrollHeight;
+      if (scrolled >= total - 400) {
+        setVisibleCount((c) => c + BATCH);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
 
   // Sync lang to sessionStorage so detail page can read it
@@ -289,19 +269,9 @@ export default function HomePage() {
                 />
               ))
             ) : filtered.length > 0 ? (
-              <>
-                {/* top spacer */}
-                {range.start > 0 && (
-                  <div ref={topSentinel} style={{ gridColumn: "1/-1", height: 1 }} />
-                )}
-                {filtered.slice(range.start, range.end).map((p) => (
-                  <PokemonCard key={p.slug} pokemon={p} lang={lang} />
-                ))}
-                {/* bottom sentinel */}
-                {range.end < filtered.length && (
-                  <div ref={bottomSentinel} style={{ gridColumn: "1/-1", height: 1 }} />
-                )}
-              </>
+filtered.slice(0, visibleCount).map((p) => (
+                <PokemonCard key={p.slug} pokemon={p} lang={lang} />
+              ))
             ) : (
               <div className="empty-state">
                 <div className="empty-icon">🔍</div>
