@@ -8,6 +8,7 @@ export type TimeOfDay = "any" | "day" | "night" | "morning" | "dawn" | "dusk";
 export type Weather = "any" | "clear" | "rain" | "snow" | "thunderstorm" | "fog" | "wind";
 export type Dimension = "overworld" | "nether" | "end";
 export type EvolutionMethod = "base" | "level" | "stone" | "trade" | "trade_item" | "friendship" | "interaction" | "other";
+export type Lang = "fr" | "en";
 
 export interface SpawnEntry {
   biomes: string[];
