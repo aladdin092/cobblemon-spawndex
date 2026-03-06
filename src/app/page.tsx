@@ -274,9 +274,7 @@ export default function HomePage() {
                   <PokemonCard key={p.slug} pokemon={p} lang={lang} />
                 ))}
                 {visibleCount < filtered.length && (
-                  <div ref={sentinelRef} style={{ gridColumn: "1/-1", height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: 32, height: 32, border: "3px solid var(--accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                  </div>
+                  <div ref={sentinelRef} style={{ gridColumn: "1/-1", height: 20 }} />
                 )}
               </>
             ) : (
