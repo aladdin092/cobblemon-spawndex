@@ -1,0 +1,215 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Pokemon, FilterState } from "@/types";
+import {
+  getHighestRarity,
+  getBestSpawnRate,
+  RARITY_ORDER,
+  RARITY_LABELS,
+} from "@/utils";
+import { PokemonCard } from "@/components/PokemonCard";
+import { FilterBar } from "@/components/FilterBar";
+import { TeamPlanner } from "@/components/TeamPlanner";
+import { useTheme } from "@/components/ThemeProvider";
+
+type View = "list" | "team";
+
+const DEFAULT_FILTERS: FilterState = {
+  search: "",
+  rarity: [],
+  time: [],
+  weather: [],
+  dimension: [],
+  sortBy: "name",
+};
+
+export default function HomePage() {
+  const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [view, setView] = useState<View>("list");
+  const { theme, toggle } = useTheme();
+
+  useEffect(() => {
+    fetch("/data/pokemon.json")
+      .then((r) => r.json())
+      .then((data: Pokemon[]) => {
+        setAllPokemon(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = [...allPokemon];
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.types.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    if (filters.rarity.length)
+      list = list.filter((p) => filters.rarity.includes(getHighestRarity(p)));
+    if (filters.time.length)
+      list = list.filter((p) =>
+        p.spawns.some((s) => filters.time.includes(s.time))
+      );
+    if (filters.weather.length)
+      list = list.filter((p) =>
+        p.spawns.some((s) => filters.weather.includes(s.weather))
+      );
+    if (filters.dimension.length)
+      list = list.filter((p) =>
+        p.spawns.some((s) => filters.dimension.includes(s.dimension))
+      );
+
+    if (filters.sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+    else if (filters.sortBy === "rarity")
+      list.sort(
+        (a, b) =>
+          RARITY_ORDER[getHighestRarity(b)] - RARITY_ORDER[getHighestRarity(a)]
+      );
+    else if (filters.sortBy === "spawnRate")
+      list.sort((a, b) => getBestSpawnRate(b) - getBestSpawnRate(a));
+
+    return list;
+  }, [allPokemon, filters]);
+
+  return (
+    <>
+      {/* ── HEADER ── */}
+      <header className="header">
+        <div className="header-inner">
+          <Link href="/" className="logo" onClick={() => setView("list")}>
+            <div className="logo-icon">⚔️</div>
+            <div>
+              <div className="logo-text">SpawnDex</div>
+              <div className="logo-sub">COBBLEMON</div>
+            </div>
+          </Link>
+
+          <div className="search-wrap">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search Pokémon, type..."
+              value={filters.search}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, search: e.target.value }))
+              }
+            />
+          </div>
+
+          <div className="header-actions">
+            <button
+              className={`btn ${view === "list" ? "active" : ""}`}
+              onClick={() => setView("list")}
+            >
+              🗂 Dex
+            </button>
+            <button
+              className={`btn ${view === "team" ? "active" : ""}`}
+              onClick={() => setView("team")}
+            >
+              🤝 Team
+            </button>
+            <button className="btn" onClick={toggle} title="Toggle theme">
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── CONTENT ── */}
+      {view === "team" ? (
+        <TeamPlanner allPokemon={allPokemon} />
+      ) : (
+        <>
+          {/* Filters */}
+          <FilterBar filters={filters} onChange={setFilters} />
+
+          {/* Sort + count bar */}
+          <div className="sort-bar">
+            <span style={{ fontSize: 13, color: "var(--text2)" }}>
+              Showing <strong>{filtered.length}</strong> Pokémon
+            </span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "var(--text2)",
+                  fontWeight: 700,
+                }}
+              >
+                SORT:
+              </span>
+              {(["name", "rarity", "spawnRate"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilters((f) => ({ ...f, sortBy: s }))}
+                  style={{
+                    padding: "3px 10px",
+                    borderRadius: "20px",
+                    border: `1px solid ${filters.sortBy === s ? "var(--accent)" : "var(--border)"}`,
+                    background:
+                      filters.sortBy === s ? "var(--accent)" : "var(--bg3)",
+                    color:
+                      filters.sortBy === s ? "#fff" : "var(--text2)",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {s === "name" ? "A–Z" : s === "rarity" ? "Rarity" : "Spawn Rate"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid */}
+          <div className="grid-container">
+            {loading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "var(--bg2)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "var(--radius)",
+                    height: 230,
+                    animation: "pulse 1.5s ease-in-out infinite",
+                    opacity: 0.6,
+                  }}
+                />
+              ))
+            ) : filtered.length > 0 ? (
+              filtered.map((p) => <PokemonCard key={p.slug} pokemon={p} />)
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">🔍</div>
+                <h3
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 24,
+                    marginBottom: 8,
+                    color: "var(--text)",
+                  }}
+                >
+                  No Pokémon Found
+                </h3>
+                <p>Try adjusting your search or filters</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
