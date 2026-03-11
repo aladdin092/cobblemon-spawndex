@@ -104,6 +104,13 @@ export default function PokemonDetailPage() {
 
   const rarity = getHighestRarity(pokemon);
   const biomes = getAllBiomes(pokemon);
+
+  // Navigation prev/next by dex number
+  const sortedByDex = [...allPokemon].sort((a, b) => a.id - b.id);
+  const currentIdx = sortedByDex.findIndex((p) => p.slug === slug);
+  const prevPokemon = currentIdx > 0 ? sortedByDex[currentIdx - 1] : null;
+  const nextPokemon = currentIdx < sortedByDex.length - 1 ? sortedByDex[currentIdx + 1] : null;
+
   const displayName = lang === "fr"
     ? (pokemon.name_fr || pokemon.name_en || pokemon.name)
     : (pokemon.name_en || pokemon.name);
@@ -160,6 +167,57 @@ export default function PokemonDetailPage() {
           </div>
         </div>
       </header>
+
+      {/* ── NAV PREV/NEXT ── */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "8px 24px",
+        maxWidth: 900,
+        margin: "0 auto",
+        gap: 8,
+      }}>
+        {prevPokemon ? (
+          <Link href={`/pokemon/${prevPokemon.slug}`} style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: "var(--bg2)", border: "1px solid var(--border)",
+            borderRadius: 12, padding: "8px 14px", textDecoration: "none",
+            color: "var(--text)", transition: "all 0.15s", minWidth: 0,
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"}
+          onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"}
+          >
+            <img src={prevPokemon.sprite} alt="" width={32} height={32} style={{ objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)" }}>← {lang === "fr" ? "Précédent" : "Previous"}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}>
+                #{String(prevPokemon.id).padStart(4,"0")} {lang === "fr" ? (prevPokemon.name_fr || prevPokemon.name_en || prevPokemon.name) : (prevPokemon.name_en || prevPokemon.name)}
+              </div>
+            </div>
+          </Link>
+        ) : <div />}
+
+        {nextPokemon ? (
+          <Link href={`/pokemon/${nextPokemon.slug}`} style={{
+            display: "flex", alignItems: "center", gap: 8, flexDirection: "row-reverse",
+            background: "var(--bg2)", border: "1px solid var(--border)",
+            borderRadius: 12, padding: "8px 14px", textDecoration: "none",
+            color: "var(--text)", transition: "all 0.15s", minWidth: 0,
+          }}
+          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"}
+          onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"}
+          >
+            <img src={nextPokemon.sprite} alt="" width={32} height={32} style={{ objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ minWidth: 0, textAlign: "right" }}>
+              <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)" }}>{lang === "fr" ? "Suivant" : "Next"} →</div>
+              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}>
+                #{String(nextPokemon.id).padStart(4,"0")} {lang === "fr" ? (nextPokemon.name_fr || nextPokemon.name_en || nextPokemon.name) : (nextPokemon.name_en || nextPokemon.name)}
+              </div>
+            </div>
+          </Link>
+        ) : <div />}
+      </div>
 
       {/* ── HERO ── */}
       <div className="detail-hero">
