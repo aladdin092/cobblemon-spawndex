@@ -131,7 +131,7 @@ function FilterContent({ filters, onChange, lang }: { filters: FilterState; onCh
                   filter: selected ? "drop-shadow(0 1px 1px rgba(0,0,0,0.3))" : "none",
                   opacity: selected ? 1 : 0.5,
                 }}>
-                  {TYPE_ICONS[t]()}
+                  {TYPE_ICONS[t](16)}
                 </span>
                 {lang === "fr" ? TYPE_NAMES_FR[t] : t}
               </button>
@@ -326,7 +326,7 @@ export function FilterBar({ filters, onChange, lang, mobileOnly, desktopOnly }: 
                   }}
                 >
                   <span style={{ width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {TYPE_ICONS[t]()}
+                    {TYPE_ICONS[t](16)}
                   </span>
                 </button>
               );
