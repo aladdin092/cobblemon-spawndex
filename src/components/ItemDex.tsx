@@ -13,14 +13,8 @@ interface Props {
 }
 
 function getItemImageUrls(itemName: string): string[] {
-  const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
-  // Minecraft items: lowercase with underscores (feather, raw_chicken, blaze_rod...)
-  const mcSlug = itemName.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "");
-  return [
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
-    `https://mcasset.cloud/1.21/assets/minecraft/textures/item/${mcSlug}.png`,
-    `https://mcasset.cloud/1.20.1/assets/minecraft/textures/item/${mcSlug}.png`,
-  ];
+  const mcSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "_");
+  return [`/items/${mcSlug}.png`];
 }
 
 function chanceToNum(chance: string): number {

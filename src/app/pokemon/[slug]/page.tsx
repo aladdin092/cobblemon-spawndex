@@ -24,18 +24,14 @@ const STAT_NAMES: Record<string, string> = {
   hp: "HP", atk: "ATK", def: "DEF", spa: "SP.A", spd: "SP.D", spe: "SPE",
 };
 
-function ItemThumb({ pokeSlug, mcSlug, name }: { pokeSlug: string; mcSlug: string; name: string }) {
-  const [idx, setIdx] = useState(0);
-  const urls = [
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
-    `https://mcasset.cloud/1.21/assets/minecraft/textures/item/${mcSlug}.png`,
-    `https://mcasset.cloud/1.20.1/assets/minecraft/textures/item/${mcSlug}.png`,
-  ];
-  if (idx >= urls.length) return <span style={{ fontSize: 20 }}>🎒</span>;
+function ItemThumb({ name }: { name: string }) {
+  const [failed, setFailed] = useState(false);
+  const mcSlug = name.toLowerCase().replace(/'/g, "").replace(/\s+/g, "_");
+  if (failed) return <span style={{ fontSize: 20 }}>🎒</span>;
   return (
-    <img src={urls[idx]} alt={name} width={24} height={24}
+    <img src={`/items/${mcSlug}.png`} alt={name} width={24} height={24}
       style={{ objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }}
-      onError={() => setIdx(i => i + 1)} />
+      onError={() => setFailed(true)} />
   );
 }
 
@@ -356,9 +352,6 @@ export default function PokemonDetailPage() {
                   const allSame = drops.every(d => d.chance === drops[0].chance);
                   const showVariants = drops.length > 1 && !allSame;
                   const d = drops[0];
-                  const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
-                  const mcSlug = itemName.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "");
-
                   return (
                     <div key={itemName} style={{
                       background: "var(--bg3)",
@@ -369,7 +362,7 @@ export default function PokemonDetailPage() {
                     }}>
                       {/* Item image + name */}
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <ItemThumb pokeSlug={pokeSlug} mcSlug={mcSlug} name={itemName} />
+                        <ItemThumb name={itemName} />
                         <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, color: "var(--text)" }}>
                           {itemName}
                         </div>
