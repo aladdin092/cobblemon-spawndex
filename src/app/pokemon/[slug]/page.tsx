@@ -28,7 +28,8 @@ function ItemThumb({ pokeSlug, mcSlug, name }: { pokeSlug: string; mcSlug: strin
   const [idx, setIdx] = useState(0);
   const urls = [
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
-    `https://minecraft.wiki/images/${mcSlug}.png`,
+    `https://mcasset.cloud/1.21/assets/minecraft/textures/item/${mcSlug}.png`,
+    `https://mcasset.cloud/1.20.1/assets/minecraft/textures/item/${mcSlug}.png`,
   ];
   if (idx >= urls.length) return <span style={{ fontSize: 20 }}>🎒</span>;
   return (
@@ -356,7 +357,7 @@ export default function PokemonDetailPage() {
                   const showVariants = drops.length > 1 && !allSame;
                   const d = drops[0];
                   const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
-                  const mcSlug = itemName.replace(/\s+/g, "_");
+                  const mcSlug = itemName.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "");
 
                   return (
                     <div key={itemName} style={{

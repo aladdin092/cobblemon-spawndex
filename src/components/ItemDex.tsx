@@ -14,10 +14,12 @@ interface Props {
 
 function getItemImageUrls(itemName: string): string[] {
   const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
-  const mcSlug = itemName.replace(/\s+/g, "_");
+  // Minecraft items: lowercase with underscores (feather, raw_chicken, blaze_rod...)
+  const mcSlug = itemName.toLowerCase().replace(/\s+/g, "_").replace(/'/g, "");
   return [
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
-    `https://minecraft.wiki/images/${mcSlug}.png`,
+    `https://mcasset.cloud/1.21/assets/minecraft/textures/item/${mcSlug}.png`,
+    `https://mcasset.cloud/1.20.1/assets/minecraft/textures/item/${mcSlug}.png`,
   ];
 }
 
