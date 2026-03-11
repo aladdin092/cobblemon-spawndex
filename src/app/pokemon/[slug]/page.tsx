@@ -168,56 +168,46 @@ export default function PokemonDetailPage() {
         </div>
       </header>
 
-      {/* ── NAV PREV/NEXT ── */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "8px 24px",
-        maxWidth: 900,
-        margin: "0 auto",
-        gap: 8,
-      }}>
-        {prevPokemon ? (
-          <Link href={`/pokemon/${prevPokemon.slug}`} style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: "var(--bg2)", border: "1px solid var(--border)",
-            borderRadius: 12, padding: "8px 14px", textDecoration: "none",
-            color: "var(--text)", transition: "all 0.15s", minWidth: 0,
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"}
-          onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"}
-          >
-            <img src={prevPokemon.sprite} alt="" width={32} height={32} style={{ objectFit: "contain", flexShrink: 0 }} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)" }}>← {lang === "fr" ? "Précédent" : "Previous"}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}>
-                #{String(prevPokemon.id).padStart(4,"0")} {lang === "fr" ? (prevPokemon.name_fr || prevPokemon.name_en || prevPokemon.name) : (prevPokemon.name_en || prevPokemon.name)}
-              </div>
-            </div>
-          </Link>
-        ) : <div />}
+      {/* ── NAV PREV/NEXT (floating sides) ── */}
+      {prevPokemon && (
+        <Link href={`/pokemon/${prevPokemon.slug}`} style={{
+          position: "fixed", left: 12, top: "50%", transform: "translateY(-50%)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: 16, padding: "12px 10px", textDecoration: "none",
+          color: "var(--text)", transition: "all 0.15s", zIndex: 50,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", maxWidth: 80,
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1.05)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1)"; }}
+        >
+          <span style={{ fontSize: 18 }}>←</span>
+          <img src={prevPokemon.sprite} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
+          <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-display)", textAlign: "center", lineHeight: 1.2, wordBreak: "break-word" }}>
+            {lang === "fr" ? (prevPokemon.name_fr || prevPokemon.name_en || prevPokemon.name) : (prevPokemon.name_en || prevPokemon.name)}
+          </div>
+        </Link>
+      )}
 
-        {nextPokemon ? (
-          <Link href={`/pokemon/${nextPokemon.slug}`} style={{
-            display: "flex", alignItems: "center", gap: 8, flexDirection: "row-reverse",
-            background: "var(--bg2)", border: "1px solid var(--border)",
-            borderRadius: 12, padding: "8px 14px", textDecoration: "none",
-            color: "var(--text)", transition: "all 0.15s", minWidth: 0,
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"}
-          onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"}
-          >
-            <img src={nextPokemon.sprite} alt="" width={32} height={32} style={{ objectFit: "contain", flexShrink: 0 }} />
-            <div style={{ minWidth: 0, textAlign: "right" }}>
-              <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)" }}>{lang === "fr" ? "Suivant" : "Next"} →</div>
-              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 120 }}>
-                #{String(nextPokemon.id).padStart(4,"0")} {lang === "fr" ? (nextPokemon.name_fr || nextPokemon.name_en || nextPokemon.name) : (nextPokemon.name_en || nextPokemon.name)}
-              </div>
-            </div>
-          </Link>
-        ) : <div />}
-      </div>
+      {nextPokemon && (
+        <Link href={`/pokemon/${nextPokemon.slug}`} style={{
+          position: "fixed", right: 12, top: "50%", transform: "translateY(-50%)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: 16, padding: "12px 10px", textDecoration: "none",
+          color: "var(--text)", transition: "all 0.15s", zIndex: 50,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", maxWidth: 80,
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1.05)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1)"; }}
+        >
+          <span style={{ fontSize: 18 }}>→</span>
+          <img src={nextPokemon.sprite} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
+          <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-display)", textAlign: "center", lineHeight: 1.2, wordBreak: "break-word" }}>
+            {lang === "fr" ? (nextPokemon.name_fr || nextPokemon.name_en || nextPokemon.name) : (nextPokemon.name_en || nextPokemon.name)}
+          </div>
+        </Link>
+      )}
 
       {/* ── HERO ── */}
       <div className="detail-hero">
