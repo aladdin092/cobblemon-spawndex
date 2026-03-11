@@ -21,13 +21,22 @@ import { useTheme } from "@/components/ThemeProvider";
 import type { Lang } from "@/types";
 
 const STAT_NAMES: Record<string, string> = {
-  hp: "HP",
-  atk: "ATK",
-  def: "DEF",
-  spa: "SP.A",
-  spd: "SP.D",
-  spe: "SPE",
+  hp: "HP", atk: "ATK", def: "DEF", spa: "SP.A", spd: "SP.D", spe: "SPE",
 };
+
+function ItemThumb({ pokeSlug, mcSlug, name }: { pokeSlug: string; mcSlug: string; name: string }) {
+  const [idx, setIdx] = useState(0);
+  const urls = [
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
+    `https://minecraft.wiki/images/${mcSlug}.png`,
+  ];
+  if (idx >= urls.length) return <span style={{ fontSize: 20 }}>🎒</span>;
+  return (
+    <img src={urls[idx]} alt={name} width={24} height={24}
+      style={{ objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }}
+      onError={() => setIdx(i => i + 1)} />
+  );
+}
 
 export default function PokemonDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -317,48 +326,84 @@ export default function PokemonDetailPage() {
         )}
 
         {/* DROPS */}
-        {pokemon.drops && pokemon.drops.length > 0 && (
-          <>
-            <div className="section-title">🎁 {lang === "fr" ? "Objets droppés" : "Item Drops"}</div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-              {pokemon.drops.map((drop, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "var(--bg3)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 10,
-                    padding: "10px 16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 4,
-                    minWidth: 140,
-                  }}
-                >
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, color: "var(--text)" }}>
-                    🎒 {drop.item}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text2)" }}>
-                    {lang === "fr" ? "Chance" : "Chance"} :{" "}
-                    <strong style={{ color: "var(--accent)" }}>
-                      {drop.chance.includes("%") ? drop.chance : `${drop.minQty}–${drop.maxQty}`}
-                    </strong>
-                  </div>
-                  {drop.minQty !== drop.maxQty && !drop.chance.includes("%") === false && (
-                    <div style={{ fontSize: 11, color: "var(--text2)" }}>
-                      {lang === "fr" ? "Qté" : "Qty"} : {drop.minQty === drop.maxQty ? drop.minQty : `${drop.minQty}–${drop.maxQty}`}
+        {pokemon.drops && pokemon.drops.length > 0 && (() => {
+          // Group by item name
+          const grouped: Record<string, typeof pokemon.drops> = {};
+          for (const d of pokemon.drops) {
+            if (!d.item) continue;
+            if (!grouped[d.item]) grouped[d.item] = [];
+            grouped[d.item].push(d);
+          }
+
+          const cleanCond = (cond: string) =>
+            cond.replace(/biome:/gi, "").replace(/,\s*/g, ", ").trim();
+
+          const chanceColor = (chance: string) => {
+            const n = parseFloat(chance);
+            if (chance.match(/^\d+-\d+$/)) return "#58a6ff";
+            if (n >= 25) return "#3fb950";
+            if (n >= 10) return "#f8d030";
+            if (n >= 5)  return "#ff9d00";
+            return "#ff7b7b";
+          };
+
+          return (
+            <>
+              <div className="section-title">🎁 {lang === "fr" ? "Objets droppés" : "Item Drops"}</div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
+                {Object.entries(grouped).map(([itemName, drops]) => {
+                  const allSame = drops.every(d => d.chance === drops[0].chance);
+                  const showVariants = drops.length > 1 && !allSame;
+                  const d = drops[0];
+                  const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
+                  const mcSlug = itemName.replace(/\s+/g, "_");
+
+                  return (
+                    <div key={itemName} style={{
+                      background: "var(--bg3)",
+                      border: `1px solid ${showVariants ? "rgba(248,208,48,0.3)" : "var(--border)"}`,
+                      borderRadius: 12, padding: "12px 16px",
+                      display: "flex", flexDirection: "column", gap: 6,
+                      minWidth: 150,
+                    }}>
+                      {/* Item image + name */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <ItemThumb pokeSlug={pokeSlug} mcSlug={mcSlug} name={itemName} />
+                        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 13, color: "var(--text)" }}>
+                          {itemName}
+                        </div>
+                      </div>
+
+                      {/* Single drop */}
+                      {!showVariants && (
+                        <div style={{ fontSize: 12, color: "var(--text2)" }}>
+                          Chance : <strong style={{ color: chanceColor(d.chance) }}>{d.chance}</strong>
+                        </div>
+                      )}
+                      {!showVariants && (d as any).conditions && (
+                        <div style={{ fontSize: 10, color: "var(--text2)" }}>
+                          📍 {cleanCond((d as any).conditions)}
+                        </div>
+                      )}
+
+                      {/* Variants */}
+                      {showVariants && drops.map((drop, di) => (
+                        <div key={di} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <strong style={{ fontSize: 12, color: chanceColor(drop.chance) }}>{drop.chance}</strong>
+                          {(drop as any).conditions && (
+                            <span style={{ fontSize: 10, color: "var(--text2)" }}>
+                              📍 {cleanCond((drop as any).conditions)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  {(drop as any).conditions && (
-                    <div style={{ fontSize: 10, color: "var(--text2)", fontStyle: "italic" }}>
-                      ⚠️ {(drop as any).conditions}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
 
         {/* HUNT TIPS */}
         <div className="section-title">💡 {lang === "fr" ? "Méthodes de chasse" : "Hunt Methods"}</div>
