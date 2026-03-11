@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Pokemon, FilterState } from "@/types";
+import type { Lang } from "@/types";
 import {
   getHighestRarity,
   getBestSpawnRate,
@@ -16,7 +17,6 @@ import { BiomeDex } from "@/components/BiomeDex";
 import { useTheme } from "@/components/ThemeProvider";
 
 type View = "list" | "team" | "items" | "biomes";
-type Lang = "fr" | "en";
 
 const DEFAULT_FILTERS: FilterState = {
   search: "",

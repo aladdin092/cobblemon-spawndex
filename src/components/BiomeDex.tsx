@@ -3,10 +3,10 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Pokemon } from "@/types";
+import type { Lang } from "@/types";
 import { TypeBadge } from "./TypeBadge";
 import { RARITY_BG } from "@/utils";
 
-type Lang = "fr" | "en";
 
 interface Props {
   allPokemon: Pokemon[];

@@ -4,9 +4,9 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Pokemon } from "@/types";
+import type { Lang } from "@/types";
 import { TypeBadge } from "./TypeBadge";
 
-type Lang = "fr" | "en";
 type SortMode = "chance_desc" | "chance_asc" | "name_az" | "name_za" | "dex_asc" | "dex_desc";
 
 interface Props {

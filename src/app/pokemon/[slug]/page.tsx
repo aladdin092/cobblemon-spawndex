@@ -8,20 +8,17 @@ import Image from "next/image";
 import { Pokemon } from "@/types";
 import {
   getHighestRarity,
-  getAllBiomes,
   generateCaptureGuide,
   TIME_ICONS,
   WEATHER_ICONS,
   DIM_ICONS,
-  RARITY_LABELS,
   statColor,
 } from "@/utils";
 import { TypeBadge } from "@/components/TypeBadge";
 import { BiomeModal } from "@/components/BiomeModal";
 import { RarityBadge } from "@/components/RarityBadge";
 import { useTheme } from "@/components/ThemeProvider";
-
-type Lang = "fr" | "en";
+import type { Lang } from "@/types";
 
 const STAT_NAMES: Record<string, string> = {
   hp: "HP",
@@ -103,7 +100,6 @@ export default function PokemonDetailPage() {
   }
 
   const rarity = getHighestRarity(pokemon);
-  const biomes = getAllBiomes(pokemon);
 
   // Navigation prev/next by dex number
   const sortedByDex = [...allPokemon].sort((a, b) => a.id - b.id);

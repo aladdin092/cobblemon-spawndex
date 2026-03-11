@@ -1,6 +1,5 @@
 "use client";
-
-type Lang = "fr" | "en";
+import type { Lang } from "@/types";
 
 interface BiomeLocation {
   mod: string;
