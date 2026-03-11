@@ -224,7 +224,7 @@ export function ItemDex({ allPokemon, lang }: Props) {
 
   // ── Grid view ──
   return (
-    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 20px" }}>
+    <div style={{ padding: "24px 28px" }}>
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 10 }}>
           🎒 {lang === "fr" ? "Items Droppés" : "Item Drops"}
@@ -263,7 +263,7 @@ export function ItemDex({ allPokemon, lang }: Props) {
           </div>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 18 }}>
           {filteredItems.map(item => {
             const count = itemIndex[item].length;
             const bestDrop = itemIndex[item].reduce((best, r) =>
