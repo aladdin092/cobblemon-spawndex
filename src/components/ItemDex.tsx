@@ -177,7 +177,7 @@ export function ItemDex({ allPokemon, lang }: Props) {
         </div>
 
         {/* Droppers grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14 }}>
           {droppers.map((r, i) => {
             const { color, bg } = chanceStyle(r.chance);
             const displayName = lang === "fr"
