@@ -2,515 +2,307 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Pokemon } from "@/types";
 import type { Lang } from "@/types";
 import { TypeBadge } from "./TypeBadge";
-
-type SortMode = "chance_desc" | "chance_asc" | "name_az" | "name_za" | "dex_asc" | "dex_desc";
+import { getHighestRarity } from "@/utils";
 
 interface Props {
   allPokemon: Pokemon[];
   lang: Lang;
 }
 
-// Parse chance string to a number for sorting
+function getItemImageUrls(itemName: string): string[] {
+  const pokeSlug = itemName.toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
+  const mcSlug = itemName.replace(/\s+/g, "_");
+  return [
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${pokeSlug}.png`,
+    `https://minecraft.wiki/images/${mcSlug}.png`,
+  ];
+}
+
 function chanceToNum(chance: string): number {
   if (!chance) return 0;
-  // percentage
   const pct = chance.match(/^(\d+(?:\.\d+)?)%$/);
   if (pct) return parseFloat(pct[1]);
-  // quantity range like "0-1", "1-3" — treat as average * 100 (always drops)
-  const range = chance.match(/^(\d+)-(\d+)$/);
-  if (range) return 100; // guaranteed drop, sort high
-  // "100%"
-  if (chance === "100%") return 100;
+  if (chance.match(/^\d+-\d+$/)) return 100;
   return 0;
 }
 
-function chanceLabel(chance: string): { label: string; color: string; bg: string } {
+function chanceStyle(chance: string): { color: string; bg: string } {
   const n = chanceToNum(chance);
-  if (chance.includes("-") && !chance.includes("%")) {
-    // quantity drop (0-1, 1-3 etc)
-    return { label: chance, color: "#58a6ff", bg: "rgba(88,166,255,0.12)" };
-  }
-  if (n >= 100) return { label: "100%", color: "#3fb950", bg: "rgba(63,185,80,0.12)" };
-  if (n >= 25)  return { label: chance, color: "#3fb950", bg: "rgba(63,185,80,0.12)" };
-  if (n >= 10)  return { label: chance, color: "#f8d030", bg: "rgba(248,208,48,0.12)" };
-  if (n >= 5)   return { label: chance, color: "#ff9d00", bg: "rgba(255,157,0,0.12)" };
-  return { label: chance, color: "#ff7b7b", bg: "rgba(255,123,123,0.12)" };
+  if (chance.match(/^\d+-\d+$/) && !chance.includes("%")) return { color: "#58a6ff", bg: "rgba(88,166,255,0.15)" };
+  if (n >= 25)  return { color: "#3fb950", bg: "rgba(63,185,80,0.15)" };
+  if (n >= 10)  return { color: "#f8d030", bg: "rgba(248,208,48,0.15)" };
+  if (n >= 5)   return { color: "#ff9d00", bg: "rgba(255,157,0,0.15)" };
+  return { color: "#ff7b7b", bg: "rgba(255,123,123,0.15)" };
 }
 
-const SORT_OPTIONS: { value: SortMode; label_fr: string; label_en: string }[] = [
-  { value: "chance_desc", label_fr: "Chance ↓",  label_en: "Chance ↓" },
-  { value: "chance_asc",  label_fr: "Chance ↑",  label_en: "Chance ↑" },
-  { value: "name_az",     label_fr: "Nom A–Z",   label_en: "Name A–Z" },
-  { value: "name_za",     label_fr: "Nom Z–A",   label_en: "Name Z–A" },
-  { value: "dex_asc",     label_fr: "№ Dex ↑",   label_en: "№ Dex ↑" },
-  { value: "dex_desc",    label_fr: "№ Dex ↓",   label_en: "№ Dex ↓" },
-];
+function ItemImage({ name, size = 56 }: { name: string; size?: number }) {
+  const [idx, setIdx] = useState(0);
+  const urls = getItemImageUrls(name);
+  if (idx >= urls.length) {
+    return (
+      <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.5 }}>
+        🎒
+      </div>
+    );
+  }
+  return (
+    <img
+      src={urls[idx]}
+      alt={name}
+      width={size}
+      height={size}
+      style={{ objectFit: "contain", imageRendering: "pixelated" }}
+      onError={() => setIdx(i => i + 1)}
+    />
+  );
+}
 
 export function ItemDex({ allPokemon, lang }: Props) {
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortMode>("chance_desc");
-  const [condFilter, setCondFilter] = useState(false); // show biome-conditional drops
+  const [sortDroppers, setSortDroppers] = useState<"chance" | "dex" | "name">("chance");
 
-  // Build item index: item -> [{pokemon, drop}]
   const itemIndex = useMemo(() => {
     const index: Record<string, { pokemon: Pokemon; chance: string; minQty: number; maxQty: number; conditions?: string }[]> = {};
     for (const p of allPokemon) {
       for (const d of p.drops || []) {
         if (!d.item) continue;
         if (!index[d.item]) index[d.item] = [];
-        index[d.item].push({
-          pokemon: p,
-          chance: d.chance,
-          minQty: d.minQty,
-          maxQty: d.maxQty,
-          conditions: (d as any).conditions,
-        });
+        index[d.item].push({ pokemon: p, chance: d.chance, minQty: d.minQty, maxQty: d.maxQty, conditions: (d as any).conditions });
       }
     }
     return index;
   }, [allPokemon]);
 
-  // Filtered item list for autocomplete
   const filteredItems = useMemo(() => {
     const q = search.toLowerCase().trim();
     return Object.keys(itemIndex)
-      .filter(item => item.toLowerCase().includes(q))
-      .sort((a, b) => a.localeCompare(b));
+      .filter(item => !q || item.toLowerCase().includes(q))
+      .sort((a, b) => itemIndex[b].length - itemIndex[a].length);
   }, [itemIndex, search]);
 
-  // Results for selected item
-  const results = useMemo(() => {
+  const droppers = useMemo(() => {
     if (!selectedItem || !itemIndex[selectedItem]) return [];
-    let list = [...itemIndex[selectedItem]];
-    if (!condFilter) {
-      list = list.filter(r => !r.conditions);
-    }
+    const list = [...itemIndex[selectedItem]];
     list.sort((a, b) => {
+      if (sortDroppers === "chance") return chanceToNum(b.chance) - chanceToNum(a.chance);
+      if (sortDroppers === "dex") return a.pokemon.id - b.pokemon.id;
       const na = lang === "fr" ? (a.pokemon.name_fr || a.pokemon.name_en) : a.pokemon.name_en;
       const nb = lang === "fr" ? (b.pokemon.name_fr || b.pokemon.name_en) : b.pokemon.name_en;
-      switch (sort) {
-        case "chance_desc": return chanceToNum(b.chance) - chanceToNum(a.chance);
-        case "chance_asc":  return chanceToNum(a.chance) - chanceToNum(b.chance);
-        case "name_az":     return na.localeCompare(nb);
-        case "name_za":     return nb.localeCompare(na);
-        case "dex_asc":     return a.pokemon.id - b.pokemon.id;
-        case "dex_desc":    return b.pokemon.id - a.pokemon.id;
-        default:            return 0;
-      }
+      return na.localeCompare(nb);
     });
     return list;
-  }, [selectedItem, itemIndex, sort, condFilter, lang]);
+  }, [selectedItem, itemIndex, sortDroppers, lang]);
 
-  // Stats for selected item
-  const stats = useMemo(() => {
-    if (!results.length) return null;
-    const total = results.length;
-    const guaranteed = results.filter(r => r.chance === "100%" || (!r.chance.includes("%") && r.minQty > 0)).length;
-    const best = results.reduce((best, r) => chanceToNum(r.chance) > chanceToNum(best.chance) ? r : best, results[0]);
-    const types = [...new Set(results.flatMap(r => r.pokemon.types))];
-    return { total, guaranteed, best, types };
-  }, [results]);
+  // ── Detail view ──
+  if (selectedItem) {
+    const bestChance = droppers.length
+      ? droppers.reduce((best, r) => chanceToNum(r.chance) > chanceToNum(best.chance) ? r : best, droppers[0])
+      : null;
 
+    return (
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px" }}>
+        <button
+          onClick={() => setSelectedItem(null)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "var(--bg2)", border: "1px solid var(--border)",
+            borderRadius: 10, padding: "8px 16px", cursor: "pointer",
+            color: "var(--text)", fontSize: 14, fontFamily: "var(--font-display)",
+            fontWeight: 700, marginBottom: 28, transition: "all 0.15s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+        >
+          ← {lang === "fr" ? "Tous les items" : "All items"}
+        </button>
+
+        {/* Hero */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap",
+          background: "var(--bg2)", border: "1px solid var(--border)",
+          borderRadius: 20, padding: "28px 32px", marginBottom: 32,
+        }}>
+          <div style={{
+            width: 100, height: 100, flexShrink: 0,
+            background: "var(--bg3)", borderRadius: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <ItemImage name={selectedItem} size={76} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, color: "var(--text2)", fontFamily: "var(--font-display)", marginBottom: 4 }}>
+              {lang === "fr" ? "Objet" : "Item"}
+            </div>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>
+              {selectedItem}
+            </h1>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13, color: "var(--text2)" }}>
+                🐾 <strong style={{ color: "var(--text)" }}>{droppers.length}</strong> Pokémon
+              </span>
+              {bestChance && (
+                <span style={{ fontSize: 13, color: "var(--text2)" }}>
+                  ⭐ {lang === "fr" ? "Meilleure chance" : "Best chance"} :{" "}
+                  <strong style={{ color: chanceStyle(bestChance.chance).color }}>{bestChance.chance}</strong>
+                  {" "}{lang === "fr" ? "via" : "from"}{" "}
+                  <strong style={{ color: "var(--text)" }}>
+                    {lang === "fr" ? (bestChance.pokemon.name_fr || bestChance.pokemon.name_en) : bestChance.pokemon.name_en}
+                  </strong>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sort */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 13, color: "var(--text2)", fontFamily: "var(--font-display)", fontWeight: 700 }}>
+            {lang === "fr" ? "TRIER :" : "SORT:"}
+          </span>
+          {(["chance", "dex", "name"] as const).map(s => (
+            <button key={s} onClick={() => setSortDroppers(s)} style={{
+              padding: "5px 14px", borderRadius: 20, cursor: "pointer",
+              border: `1px solid ${sortDroppers === s ? "var(--accent)" : "var(--border)"}`,
+              background: sortDroppers === s ? "var(--accent)" : "var(--bg3)",
+              color: sortDroppers === s ? "#fff" : "var(--text2)",
+              fontSize: 12, fontWeight: 600, fontFamily: "inherit", transition: "all 0.15s",
+            }}>
+              {s === "chance" ? "Chance" : s === "dex" ? "№ Dex" : "A–Z"}
+            </button>
+          ))}
+        </div>
+
+        {/* Droppers grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+          {droppers.map((r, i) => {
+            const { color, bg } = chanceStyle(r.chance);
+            const displayName = lang === "fr"
+              ? (r.pokemon.name_fr || r.pokemon.name_en || r.pokemon.name)
+              : (r.pokemon.name_en || r.pokemon.name);
+            return (
+              <Link key={`${r.pokemon.slug}-${i}`} href={`/pokemon/${r.pokemon.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "14px 16px", background: "var(--bg2)",
+                  border: "1px solid var(--border)", borderRadius: 14, transition: "all 0.15s", cursor: "pointer",
+                }}
+                onMouseEnter={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = "var(--accent)"; d.style.transform = "translateY(-2px)"; d.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
+                onMouseLeave={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = "var(--border)"; d.style.transform = "none"; d.style.boxShadow = "none"; }}
+                >
+                  <div style={{ width: 60, height: 60, flexShrink: 0, background: "var(--bg3)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src={r.pokemon.sprite} alt={displayName} width={52} height={52}
+                      style={{ objectFit: "contain", imageRendering: "pixelated" }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)", marginBottom: 2 }}>
+                      #{String(r.pokemon.id).padStart(4, "0")}
+                    </div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 4 }}>
+                      {displayName}
+                    </div>
+                    <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                      {r.pokemon.types.map(t => <TypeBadge key={t} type={t} size="xs" lang={lang} />)}
+                    </div>
+                    {r.conditions && <div style={{ fontSize: 10, color: "#f8d030", marginTop: 3 }}>⚠️ {r.conditions}</div>}
+                  </div>
+                  <div style={{ flexShrink: 0, padding: "6px 10px", borderRadius: 8, background: bg, border: `1px solid ${color}40`, fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, color, minWidth: 52, textAlign: "center" }}>
+                    {r.chance}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Grid view ──
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 20px" }}>
-
-      {/* ── SEARCH BAR ── */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{
-          fontSize: 13,
-          color: "var(--text2)",
-          marginBottom: 8,
-          fontFamily: "var(--font-display)",
-          letterSpacing: 1,
-          textTransform: "uppercase",
-        }}>
-          {lang === "fr" ? "🔍 Rechercher un objet" : "🔍 Search an item"}
-        </div>
-        <div style={{ position: "relative", maxWidth: 520 }}>
+      <div style={{ marginBottom: 28 }}>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, margin: "0 0 16px", display: "flex", alignItems: "center", gap: 10 }}>
+          🎒 {lang === "fr" ? "Items Droppés" : "Item Drops"}
+          <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 400 }}>
+            {filteredItems.length} items
+          </span>
+        </h2>
+        <div style={{ position: "relative", maxWidth: 480 }}>
+          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, pointerEvents: "none" }}>🔍</span>
           <input
             type="text"
             value={search}
-            onChange={e => { setSearch(e.target.value); if (selectedItem && !e.target.value.toLowerCase().includes(selectedItem.toLowerCase())) setSelectedItem(null); }}
-            placeholder={lang === "fr" ? "Ex: Feather, Raw Chicken, Dragon's Breath..." : "e.g. Feather, Raw Chicken, Dragon's Breath..."}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={lang === "fr" ? "Rechercher un item..." : "Search an item..."}
             style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: "var(--bg2)",
-              border: "2px solid var(--border)",
-              borderRadius: 12,
-              color: "var(--text)",
-              fontSize: 15,
-              fontFamily: "var(--font-body)",
-              outline: "none",
-              transition: "border-color 0.2s",
+              width: "100%", padding: "12px 40px 12px 42px",
+              background: "var(--bg2)", border: "2px solid var(--border)",
+              borderRadius: 14, color: "var(--text)", fontSize: 15,
+              fontFamily: "var(--font-body)", outline: "none",
+              transition: "border-color 0.2s", boxSizing: "border-box",
             }}
             onFocus={e => (e.target.style.borderColor = "var(--accent)")}
             onBlur={e => (e.target.style.borderColor = "var(--border)")}
           />
           {search && (
-            <button
-              onClick={() => { setSearch(""); setSelectedItem(null); }}
-              style={{
-                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                background: "none", border: "none", color: "var(--text2)", cursor: "pointer", fontSize: 18,
-              }}
-            >×</button>
+            <button onClick={() => setSearch("")} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text2)", cursor: "pointer", fontSize: 20 }}>×</button>
           )}
         </div>
-
-        {/* Autocomplete dropdown */}
-        {search && !selectedItem && filteredItems.length > 0 && (
-          <div style={{
-            position: "absolute",
-            zIndex: 50,
-            maxWidth: 520,
-            background: "var(--bg2)",
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            marginTop: 4,
-            maxHeight: 280,
-            overflowY: "auto",
-            boxShadow: "var(--shadow)",
-          }}>
-            {filteredItems.slice(0, 30).map(item => (
-              <button
-                key={item}
-                onClick={() => { setSelectedItem(item); setSearch(item); }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  padding: "10px 16px",
-                  background: "none",
-                  border: "none",
-                  borderBottom: "1px solid var(--border)",
-                  color: "var(--text)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 14,
-                  fontFamily: "var(--font-body)",
-                  transition: "background 0.1s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--bg3)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "none")}
-              >
-                <span>🎒 {item}</span>
-                <span style={{
-                  fontSize: 11,
-                  color: "var(--text2)",
-                  background: "var(--bg3)",
-                  padding: "2px 8px",
-                  borderRadius: 10,
-                }}>
-                  {itemIndex[item].length} Pokémon
-                </span>
-              </button>
-            ))}
-            {filteredItems.length > 30 && (
-              <div style={{ padding: "8px 16px", fontSize: 12, color: "var(--text2)", textAlign: "center" }}>
-                +{filteredItems.length - 30} {lang === "fr" ? "autres items..." : "more items..."}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* ── NO ITEM SELECTED: show all items grid ── */}
-      {!selectedItem && !search && (
-        <>
-          <div style={{
-            fontSize: 13,
-            color: "var(--text2)",
-            marginBottom: 12,
-            fontFamily: "var(--font-display)",
-            letterSpacing: 1,
-            textTransform: "uppercase",
-          }}>
-            {lang === "fr" ? `📦 ${Object.keys(itemIndex).length} items disponibles` : `📦 ${Object.keys(itemIndex).length} available items`}
-          </div>
-          <div style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-          }}>
-            {Object.keys(itemIndex).sort().map(item => (
-              <button
-                key={item}
-                onClick={() => { setSelectedItem(item); setSearch(item); }}
-                style={{
-                  padding: "6px 14px",
-                  background: "var(--bg2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 20,
-                  color: "var(--text)",
-                  fontSize: 13,
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  transition: "all 0.15s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = "var(--accent)";
-                  e.currentTarget.style.color = "var(--accent)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "var(--border)";
-                  e.currentTarget.style.color = "var(--text)";
-                }}
-              >
-                🎒 {item}
-                <span style={{ fontSize: 11, color: "var(--text2)" }}>×{itemIndex[item].length}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ── RESULTS ── */}
-      {selectedItem && results.length > 0 && (
-        <>
-          {/* Stats banner */}
-          {stats && (
-            <div style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              marginBottom: 20,
-              padding: "16px 20px",
-              background: "var(--bg2)",
-              border: "1px solid var(--border)",
-              borderRadius: 12,
-            }}>
-              <div style={{ flex: 1, minWidth: 120 }}>
-                <div style={{ fontSize: 11, color: "var(--text2)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                  {lang === "fr" ? "Droppé par" : "Dropped by"}
-                </div>
-                <div style={{ fontSize: 28, fontFamily: "var(--font-display)", fontWeight: 800, color: "var(--accent)" }}>
-                  {stats.total}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text2)" }}>Pokémon</div>
-              </div>
-
-              <div style={{ flex: 1, minWidth: 120 }}>
-                <div style={{ fontSize: 11, color: "var(--text2)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                  {lang === "fr" ? "Meilleur drop" : "Best drop"}
-                </div>
-                <div style={{ fontSize: 18, fontFamily: "var(--font-display)", fontWeight: 800, color: "#3fb950" }}>
-                  {stats.best.chance}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text2)" }}>
-                  {lang === "fr"
-                    ? (stats.best.pokemon.name_fr || stats.best.pokemon.name_en)
-                    : stats.best.pokemon.name_en}
-                </div>
-              </div>
-
-              <div style={{ flex: 2, minWidth: 180 }}>
-                <div style={{ fontSize: 11, color: "var(--text2)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                  {lang === "fr" ? "Types porteurs" : "Carrier types"}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {stats.types.slice(0, 8).map(t => (
-                    <TypeBadge key={t} type={t} size="sm" />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Toolbar */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-            marginBottom: 16,
-          }}>
-            <span style={{ fontSize: 13, color: "var(--text2)" }}>
-              <strong style={{ color: "var(--text)" }}>{results.length}</strong>{" "}
-              {lang === "fr" ? "résultat(s)" : "result(s)"}
-            </span>
-
-            {/* Sort buttons */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginLeft: "auto" }}>
-              {SORT_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSort(opt.value)}
-                  style={{
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    border: `1px solid ${sort === opt.value ? "var(--accent)" : "var(--border)"}`,
-                    background: sort === opt.value ? "var(--accent)" : "var(--bg3)",
-                    color: sort === opt.value ? "#fff" : "var(--text2)",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {lang === "fr" ? opt.label_fr : opt.label_en}
-                </button>
-              ))}
-            </div>
-
-            {/* Conditional drops toggle */}
-            <button
-              onClick={() => setCondFilter(v => !v)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 20,
-                border: `1px solid ${condFilter ? "#f8d030" : "var(--border)"}`,
-                background: condFilter ? "rgba(248,208,48,0.15)" : "var(--bg3)",
-                color: condFilter ? "#f8d030" : "var(--text2)",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "all 0.15s",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-              title={lang === "fr" ? "Afficher les drops conditionnels (biome spécifique)" : "Show conditional drops (biome specific)"}
-            >
-              ⚠️ {lang === "fr" ? "Drops conditionnels" : "Conditional drops"}
-            </button>
-          </div>
-
-          {/* Results grid */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 12,
-          }}>
-            {results.map((r, i) => {
-              const { label, color, bg } = chanceLabel(r.chance);
-              const displayName = lang === "fr"
-                ? (r.pokemon.name_fr || r.pokemon.name_en)
-                : r.pokemon.name_en;
-
-              return (
-                <Link
-                  key={`${r.pokemon.slug}-${i}`}
-                  href={`/pokemon/${r.pokemon.slug}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      padding: "12px 16px",
-                      background: "var(--bg2)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      transition: "all 0.15s",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = "var(--accent)";
-                      (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow)";
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border)";
-                      (e.currentTarget as HTMLDivElement).style.transform = "none";
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                    }}
-                  >
-                    {/* Sprite */}
-                    <div style={{
-                      width: 56,
-                      height: 56,
-                      flexShrink: 0,
-                      background: "var(--bg3)",
-                      borderRadius: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                      <Image
-                        src={r.pokemon.sprite}
-                        alt={displayName}
-                        width={48}
-                        height={48}
-                        style={{ objectFit: "contain", imageRendering: "pixelated" }}
-                        unoptimized
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                        <span style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)" }}>
-                          #{String(r.pokemon.id).padStart(4, "0")}
-                        </span>
-                        <div style={{ display: "flex", gap: 3 }}>
-                          {r.pokemon.types.map(t => (
-                            <TypeBadge key={t} type={t} size="xs" />
-                          ))}
-                        </div>
-                      </div>
-                      <div style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 700,
-                        fontSize: 15,
-                        color: "var(--text)",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}>
-                        {displayName}
-                      </div>
-                      {r.conditions && (
-                        <div style={{ fontSize: 10, color: "#f8d030", marginTop: 2 }}>
-                          ⚠️ {r.conditions}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Chance badge */}
-                    <div style={{
-                      flexShrink: 0,
-                      padding: "6px 12px",
-                      borderRadius: 10,
-                      background: bg,
-                      border: `1px solid ${color}30`,
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 800,
-                      fontSize: 16,
-                      color,
-                      minWidth: 60,
-                      textAlign: "center",
-                    }}>
-                      {label}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* No results */}
-      {selectedItem && results.length === 0 && (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text2)" }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
+      {filteredItems.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text2)" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>
-            {lang === "fr" ? "Aucun Pokémon ne drop cet item" : "No Pokémon drops this item"}
+            {lang === "fr" ? "Aucun item trouvé" : "No items found"}
           </div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))", gap: 14 }}>
+          {filteredItems.map(item => {
+            const count = itemIndex[item].length;
+            const bestDrop = itemIndex[item].reduce((best, r) =>
+              chanceToNum(r.chance) > chanceToNum(best.chance) ? r : best, itemIndex[item][0]);
+            const { color } = chanceStyle(bestDrop.chance);
+
+            return (
+              <button key={item} onClick={() => setSelectedItem(item)} style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                gap: 10, padding: "20px 14px 16px",
+                background: "var(--bg2)", border: "1px solid var(--border)",
+                borderRadius: 16, cursor: "pointer", transition: "all 0.18s",
+                textAlign: "center", position: "relative",
+              }}
+              onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = "var(--accent)"; b.style.transform = "translateY(-4px)"; b.style.boxShadow = "0 8px 24px rgba(0,0,0,0.25)"; b.style.background = "var(--bg3)"; }}
+              onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.borderColor = "var(--border)"; b.style.transform = "none"; b.style.boxShadow = "none"; b.style.background = "var(--bg2)"; }}
+              >
+                {/* Count badge */}
+                <div style={{ position: "absolute", top: 10, right: 10, background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 20, padding: "2px 7px", fontSize: 10, fontWeight: 700, color: "var(--text2)", fontFamily: "var(--font-display)" }}>
+                  🐾 {count}
+                </div>
+
+                {/* Image */}
+                <div style={{ width: 72, height: 72, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ItemImage name={item} size={64} />
+                </div>
+
+                {/* Name */}
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
+                  {item}
+                </div>
+
+                {/* Best rate */}
+                <div style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "var(--font-display)" }}>
+                  ↑ {bestDrop.chance}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
