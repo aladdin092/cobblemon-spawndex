@@ -176,59 +176,58 @@ export function ItemDex({ allPokemon, lang }: Props) {
           ))}
         </div>
 
-        {/* Droppers grid — grouped by pokemon */}
+        {/* Droppers grid — grouped by pokemon, variants only when stats differ */}
         {(() => {
-          // Group by pokemon slug
           const grouped: Record<string, typeof droppers> = {};
           for (const r of droppers) {
             if (!grouped[r.pokemon.slug]) grouped[r.pokemon.slug] = [];
             grouped[r.pokemon.slug].push(r);
           }
-          const groups = Object.values(grouped);
+
+          const cleanCond = (cond: string) =>
+            cond.replace(/biome:/gi, "").replace(/,\s*/g, ", ").trim();
 
           return (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: 14 }}>
-              {groups.map(group => {
+              {Object.values(grouped).map(group => {
                 const r = group[0];
                 const displayName = lang === "fr"
                   ? (r.pokemon.name_fr || r.pokemon.name_en || r.pokemon.name)
                   : (r.pokemon.name_en || r.pokemon.name);
-                const isMultiple = group.length > 1;
+                const allSame = group.every(d => d.chance === r.chance);
+                const showVariants = group.length > 1 && !allSame;
 
                 return (
                   <Link key={r.pokemon.slug} href={`/pokemon/${r.pokemon.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
                     <div style={{
                       display: "flex", alignItems: "flex-start", gap: 14,
                       padding: "14px 16px", background: "var(--bg2)",
-                      border: `1px solid ${isMultiple ? "rgba(248,208,48,0.25)" : "var(--border)"}`,
+                      border: `1px solid ${showVariants ? "rgba(248,208,48,0.25)" : "var(--border)"}`,
                       borderRadius: 14, transition: "all 0.15s", cursor: "pointer",
                     }}
                     onMouseEnter={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = "var(--accent)"; d.style.transform = "translateY(-2px)"; d.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)"; }}
-                    onMouseLeave={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = isMultiple ? "rgba(248,208,48,0.25)" : "var(--border)"; d.style.transform = "none"; d.style.boxShadow = "none"; }}
+                    onMouseLeave={e => { const d = e.currentTarget as HTMLDivElement; d.style.borderColor = showVariants ? "rgba(248,208,48,0.25)" : "var(--border)"; d.style.transform = "none"; d.style.boxShadow = "none"; }}
                     >
-                      {/* Sprite */}
                       <div style={{ width: 60, height: 60, flexShrink: 0, background: "var(--bg3)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <img src={r.pokemon.sprite} alt={displayName} width={52} height={52}
                           style={{ objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                       </div>
 
-                      {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 10, color: "var(--text2)", fontFamily: "var(--font-display)", marginBottom: 2 }}>
                           #{String(r.pokemon.id).padStart(4, "0")}
-                          {isMultiple && <span style={{ marginLeft: 6, color: "#f8d030" }}>×{group.length} drops</span>}
                         </div>
                         <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 4 }}>
                           {displayName}
                         </div>
-                        <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginBottom: isMultiple ? 8 : 0 }}>
+                        <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginBottom: showVariants ? 8 : 0 }}>
                           {r.pokemon.types.map(t => <TypeBadge key={t} type={t} size="xs" lang={lang} />)}
                         </div>
 
-                        {/* Multiple drops listed */}
-                        {isMultiple && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {/* Variants with different chances */}
+                        {showVariants && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                             {group.map((drop, di) => {
                               const { color, bg } = chanceStyle(drop.chance);
                               return (
@@ -237,7 +236,9 @@ export function ItemDex({ allPokemon, lang }: Props) {
                                     {drop.chance}
                                   </div>
                                   {drop.conditions && (
-                                    <span style={{ fontSize: 10, color: "#f8d030" }}>⚠️ {drop.conditions}</span>
+                                    <span style={{ fontSize: 10, color: "var(--text2)" }}>
+                                      📍 {cleanCond(drop.conditions)}
+                                    </span>
                                   )}
                                 </div>
                               );
@@ -245,14 +246,14 @@ export function ItemDex({ allPokemon, lang }: Props) {
                           </div>
                         )}
 
-                        {/* Single drop conditions */}
-                        {!isMultiple && r.conditions && (
-                          <div style={{ fontSize: 10, color: "#f8d030", marginTop: 3 }}>⚠️ {r.conditions}</div>
+                        {/* Single drop condition */}
+                        {!showVariants && r.conditions && (
+                          <div style={{ fontSize: 10, color: "#f8d030", marginTop: 3 }}>⚠️ {cleanCond(r.conditions)}</div>
                         )}
                       </div>
 
-                      {/* Chance badge — only for single drop */}
-                      {!isMultiple && (() => {
+                      {/* Chance badge — only when no variants */}
+                      {!showVariants && (() => {
                         const { color, bg } = chanceStyle(r.chance);
                         return (
                           <div style={{ flexShrink: 0, padding: "6px 10px", borderRadius: 8, background: bg, border: `1px solid ${color}40`, fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, color, minWidth: 52, textAlign: "center" }}>
