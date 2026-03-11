@@ -234,7 +234,7 @@ export default function PokemonDetailPage() {
             </div>
           )}
           <div className="types-row" style={{ marginBottom: 10 }}>
-            {pokemon.types.map((t) => <TypeBadge key={t} type={t} size="md" />)}
+            {pokemon.types.map((t) => <TypeBadge key={t} type={t} size="md" lang={lang} />)}
           </div>
           <RarityBadge rarity={rarity} size="md" />
           <p style={{ marginTop: 12, fontSize: 14, color: "var(--text2)", maxWidth: 480, lineHeight: 1.6 }}>
