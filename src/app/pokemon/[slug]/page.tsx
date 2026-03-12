@@ -175,11 +175,12 @@ export default function PokemonDetailPage() {
         <Link href={`/pokemon/${prevPokemon.slug}`} style={{
           position: "fixed", left: 12, top: "50%", transform: "translateY(-50%)",
           display: "flex", alignItems: "center", gap: 6,
-          textDecoration: "none", color: "rgba(255,255,255,0.4)",
+          textDecoration: "none", color: "var(--text2)",
           transition: "all 0.15s", zIndex: 50,
+          filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.35))",
         }}
-        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.transform = "translateY(-50%) translateX(-3px)"; }}
-        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.4)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "var(--text)"; el.style.transform = "translateY(-50%) translateX(-3px)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "var(--text2)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
@@ -192,11 +193,12 @@ export default function PokemonDetailPage() {
         <Link href={`/pokemon/${nextPokemon.slug}`} style={{
           position: "fixed", right: 12, top: "50%", transform: "translateY(-50%)",
           display: "flex", alignItems: "center", gap: 6,
-          textDecoration: "none", color: "rgba(255,255,255,0.4)",
+          textDecoration: "none", color: "var(--text2)",
           transition: "all 0.15s", zIndex: 50,
+          filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.35))",
         }}
-        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.transform = "translateY(-50%) translateX(3px)"; }}
-        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.4)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "var(--text)"; el.style.transform = "translateY(-50%) translateX(3px)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "var(--text2)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
         >
           <img src={nextPokemon.sprite} alt="" width={52} height={52} style={{ objectFit: "contain", imageRendering: "pixelated" }} />
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
