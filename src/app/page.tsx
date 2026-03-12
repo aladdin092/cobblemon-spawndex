@@ -235,7 +235,7 @@ export default function HomePage() {
                 <img
                   src={icon}
                   alt={label}
-                  style={{ width: 20, height: 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                  style={{ width: id === "team" ? 32 : 20, height: id === "team" ? 32 : 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
                 />
                 {label}
               </button>
