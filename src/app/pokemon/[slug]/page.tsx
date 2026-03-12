@@ -173,37 +173,33 @@ export default function PokemonDetailPage() {
       {/* ── NAV PREV/NEXT (floating sides) ── */}
       {prevPokemon && (
         <Link href={`/pokemon/${prevPokemon.slug}`} style={{
-          position: "fixed", left: 16, top: "50%", transform: "translateY(-50%)",
-          width: 48, height: 48, borderRadius: "50%",
-          background: "rgba(15,17,23,0.85)", border: "1px solid rgba(255,255,255,0.07)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          textDecoration: "none", color: "rgba(255,255,255,0.5)",
+          position: "fixed", left: 12, top: "50%", transform: "translateY(-50%)",
+          display: "flex", alignItems: "center", gap: 6,
+          textDecoration: "none", color: "rgba(255,255,255,0.4)",
           transition: "all 0.15s", zIndex: 50,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
         }}
-        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.transform = "translateY(-50%) scale(1.08)"; }}
-        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.5)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(-50%) scale(1)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.transform = "translateY(-50%) translateX(-3px)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.4)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
+          <img src={prevPokemon.sprite} alt="" width={52} height={52} style={{ objectFit: "contain", imageRendering: "pixelated" }} />
         </Link>
       )}
 
       {nextPokemon && (
         <Link href={`/pokemon/${nextPokemon.slug}`} style={{
-          position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)",
-          width: 48, height: 48, borderRadius: "50%",
-          background: "rgba(15,17,23,0.85)", border: "1px solid rgba(255,255,255,0.07)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          textDecoration: "none", color: "rgba(255,255,255,0.5)",
+          position: "fixed", right: 12, top: "50%", transform: "translateY(-50%)",
+          display: "flex", alignItems: "center", gap: 6,
+          textDecoration: "none", color: "rgba(255,255,255,0.4)",
           transition: "all 0.15s", zIndex: 50,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
         }}
-        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.transform = "translateY(-50%) scale(1.08)"; }}
-        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.5)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(-50%) scale(1)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.transform = "translateY(-50%) translateX(3px)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.4)"; el.style.transform = "translateY(-50%) translateX(0)"; }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <img src={nextPokemon.sprite} alt="" width={52} height={52} style={{ objectFit: "contain", imageRendering: "pixelated" }} />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </Link>
