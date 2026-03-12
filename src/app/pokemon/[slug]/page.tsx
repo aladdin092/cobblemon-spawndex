@@ -173,41 +173,39 @@ export default function PokemonDetailPage() {
       {/* ── NAV PREV/NEXT (floating sides) ── */}
       {prevPokemon && (
         <Link href={`/pokemon/${prevPokemon.slug}`} style={{
-          position: "fixed", left: 12, top: "50%", transform: "translateY(-50%)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-          background: "var(--bg2)", border: "1px solid var(--border)",
-          borderRadius: 16, padding: "12px 10px", textDecoration: "none",
-          color: "var(--text)", transition: "all 0.15s", zIndex: 50,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", maxWidth: 80,
+          position: "fixed", left: 16, top: "50%", transform: "translateY(-50%)",
+          width: 48, height: 48, borderRadius: "50%",
+          background: "rgba(15,17,23,0.85)", border: "1px solid rgba(255,255,255,0.07)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          textDecoration: "none", color: "rgba(255,255,255,0.5)",
+          transition: "all 0.15s", zIndex: 50,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1.05)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.transform = "translateY(-50%) scale(1.08)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.5)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(-50%) scale(1)"; }}
         >
-          <span style={{ fontSize: 18 }}>←</span>
-          <img src={prevPokemon.sprite} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
-          <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-display)", textAlign: "center", lineHeight: 1.2, wordBreak: "break-word" }}>
-            {lang === "fr" ? (prevPokemon.name_fr || prevPokemon.name_en || prevPokemon.name) : (prevPokemon.name_en || prevPokemon.name)}
-          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
         </Link>
       )}
 
       {nextPokemon && (
         <Link href={`/pokemon/${nextPokemon.slug}`} style={{
-          position: "fixed", right: 12, top: "50%", transform: "translateY(-50%)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-          background: "var(--bg2)", border: "1px solid var(--border)",
-          borderRadius: 16, padding: "12px 10px", textDecoration: "none",
-          color: "var(--text)", transition: "all 0.15s", zIndex: 50,
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", maxWidth: 80,
+          position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)",
+          width: 48, height: 48, borderRadius: "50%",
+          background: "rgba(15,17,23,0.85)", border: "1px solid rgba(255,255,255,0.07)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          textDecoration: "none", color: "rgba(255,255,255,0.5)",
+          transition: "all 0.15s", zIndex: 50,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1.05)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-50%) scale(1)"; }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.9)"; el.style.borderColor = "rgba(255,255,255,0.2)"; el.style.transform = "translateY(-50%) scale(1.08)"; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLAnchorElement; el.style.color = "rgba(255,255,255,0.5)"; el.style.borderColor = "rgba(255,255,255,0.07)"; el.style.transform = "translateY(-50%) scale(1)"; }}
         >
-          <span style={{ fontSize: 18 }}>→</span>
-          <img src={nextPokemon.sprite} alt="" width={40} height={40} style={{ objectFit: "contain" }} />
-          <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-display)", textAlign: "center", lineHeight: 1.2, wordBreak: "break-word" }}>
-            {lang === "fr" ? (nextPokemon.name_fr || nextPokemon.name_en || nextPokemon.name) : (nextPokemon.name_en || nextPokemon.name)}
-          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </Link>
       )}
 
