@@ -230,12 +230,12 @@ export default function HomePage() {
                 key={id}
                 className={`btn ${view === id ? "active" : ""}`}
                 onClick={() => setView(id)}
-                style={{ display: "flex", alignItems: "center", gap: 6 }}
+                style={{ display: "flex", alignItems: "center", gap: 6, height: 36, overflow: "hidden" }}
               >
                 <img
                   src={icon}
                   alt={label}
-                  style={{ width: id === "team" ? 32 : 20, height: id === "team" ? 32 : 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
+                  style={{ width: id === "team" ? 28 : 20, height: id === "team" ? 28 : 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }}
                 />
                 {label}
               </button>
